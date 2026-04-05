@@ -13,7 +13,7 @@ import contactRoute from "./routes/contactRoute.js";
 const app = express();
 
 // Connect Database
-await connectDB();
+connectDB();
 
 // Middleware
 app.use(cors());
@@ -29,4 +29,8 @@ app.get('/', (req, res) => res.send("Server is running. API is ready."));
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+}
+
+export default app;
