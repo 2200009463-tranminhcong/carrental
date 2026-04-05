@@ -1,6 +1,6 @@
 
 import React from "react";
-import "./carBrands.css";
+import "./CarBrands.css";
 
 const CarBrand = () => {
 
