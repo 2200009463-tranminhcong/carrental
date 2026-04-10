@@ -32,7 +32,10 @@ const MyBookings = () => {
                     const mongoUserId = syncResponse.data.data._id;
                     const response = await api.get(`/bookings/user/${mongoUserId}`);
                     if (response.data.success) {
-                        setBookings(response.data.data);
+                        const sorted = [...response.data.data].sort(
+                            (a, b) => new Date(b.pickupDate) - new Date(a.pickupDate)
+                        );
+                        setBookings(sorted);
                     }
                 }
             } catch (error) {
@@ -81,7 +84,7 @@ const MyBookings = () => {
                     </div>
                 ) : (
                     <div>
-                        {bookings.map((booking, index) => (
+                        {bookings.map((booking) => (
                             <div
                                 key={booking._id}
                                 className="bg-[#F4F7FF] border border-[#D6E0FF] text-black grid grid-cols-2 md:grid-cols-4 gap-6 p-6 border rounded-lg mt-6 shadow-lg" >
@@ -106,7 +109,7 @@ const MyBookings = () => {
                                 <div className="md:col-span-2">
                                     <div className="flex items-center gap-3">
                                         <p className="bg-gray-100 px-3 py-1 rounded text-sm">
-                                            Đơn #{index + 1}
+                                            Đơn #{booking._id.slice(-6).toUpperCase()}
                                         </p>
                                         <p
                                             className={`px-3 py-1 text-xs font-bold rounded-full ${booking.status === "confirmed"

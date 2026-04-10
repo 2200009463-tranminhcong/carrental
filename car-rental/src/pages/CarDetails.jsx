@@ -57,6 +57,11 @@ const CarDetails = () => {
             return;
         }
 
+        if (days < 2) {
+            alert("Xe thuê tối thiểu ít nhất 2 ngày.");
+            return;
+        }
+
         if (pickupType === "delivery" && !deliveryAddress) {
             alert("Vui lòng nhập địa chỉ giao xe.");
             return;
@@ -212,8 +217,7 @@ const CarDetails = () => {
 
                             {/* Mô tả */}
                             <p className="text-gray-700 mb-6">
-                                Đây là một chiếc xe tuyệt vời với hiệu suất mạnh mẽ,
-                                thiết kế sang trọng và trải nghiệm lái xe cực kỳ thoải mái.
+                                {car.description || "Đây là một chiếc xe tuyệt vời với hiệu suất mạnh mẽ, thiết kế sang trọng và trải nghiệm lái xe cực kỳ thoải mái."}
                             </p>
                             {/* Tính năng nổi bật */}
                             <div className="">
@@ -273,7 +277,9 @@ const CarDetails = () => {
                                 onChange={(e) => setReturnDate(e.target.value)}
                                 className="bg-slate-300 text-blue-500 border px-3 py-2 rounded-lg"
                                 required
-                                min={new Date().toISOString().split("T")[0]}
+                                min={pickupDate
+                                    ? (() => { const d = new Date(pickupDate); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()
+                                    : new Date().toISOString().split("T")[0]}
                             />
                         </div>
 

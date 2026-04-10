@@ -6,72 +6,78 @@ import api from '../../utils/api'
 
 //PHẦN DOANH THU ─── Period helper ─────────────────────────────────────────────────────────────
 const PERIODS = [
-    { label: 'Hôm qua',    value: 'yesterday' },
-    { label: 'Hôm nay',    value: 'today'     },
-    { label: '7 ngày qua', value: '7days'     },
-    { label: '30 ngày qua',value: '30days'    },
-    { label: '90 ngày qua',value: '90days'    },
+    { label: 'Hôm qua', value: 'yesterday' },
+    { label: 'Hôm nay', value: 'today' },
+    { label: '7 ngày qua', value: '7days' },
+    { label: '30 ngày qua', value: '30days' },
+    { label: '90 ngày qua', value: '90days' },
 ]
 
 /** Return { start, end, prevStart, prevEnd, categories } for a period key */
 const getPeriodRange = (periodValue) => {
-    const now   = new Date()
+    const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
     switch (periodValue) {
         case 'today': {
-            const start    = today
-            const end      = now
-            const prevStart= new Date(today); prevStart.setDate(prevStart.getDate() - 1)
-            const prevEnd  = new Date(today)
-            const hours    = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2,'0')}h`)
+            const start = today
+            const end = now
+            const prevStart = new Date(today); prevStart.setDate(prevStart.getDate() - 1)
+            const prevEnd = new Date(today)
+            const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}h`)
             return { start, end, prevStart, prevEnd, bucketFn: d => d.getHours(), buckets: 24, categories: hours }
         }
         case 'yesterday': {
-            const start    = new Date(today); start.setDate(start.getDate() - 1)
-            const end      = new Date(today)
-            const prevStart= new Date(today); prevStart.setDate(prevStart.getDate() - 2)
-            const prevEnd  = new Date(today); prevEnd.setDate(prevEnd.getDate() - 1)
-            const hours    = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2,'0')}h`)
+            const start = new Date(today); start.setDate(start.getDate() - 1)
+            const end = new Date(today)
+            const prevStart = new Date(today); prevStart.setDate(prevStart.getDate() - 2)
+            const prevEnd = new Date(today); prevEnd.setDate(prevEnd.getDate() - 1)
+            const hours = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, '0')}h`)
             return { start, end, prevStart, prevEnd, bucketFn: d => d.getHours(), buckets: 24, categories: hours }
         }
         case '7days': {
-            const start    = new Date(today); start.setDate(start.getDate() - 6)
-            const end      = now
-            const prevStart= new Date(today); prevStart.setDate(prevStart.getDate() - 13)
-            const prevEnd  = new Date(today); prevEnd.setDate(prevEnd.getDate() - 7)
+            const start = new Date(today); start.setDate(start.getDate() - 6)
+            const end = now
+            const prevStart = new Date(today); prevStart.setDate(prevStart.getDate() - 13)
+            const prevEnd = new Date(today); prevEnd.setDate(prevEnd.getDate() - 7)
             const cats = Array.from({ length: 7 }, (_, i) => {
                 const d = new Date(today); d.setDate(d.getDate() - 6 + i)
-                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`
+                return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
             })
-            return { start, end, prevStart, prevEnd, bucketFn: d => {
-                const diff = Math.floor((d - start) / 86400000); return Math.min(diff, 6)
-            }, buckets: 7, categories: cats }
+            return {
+                start, end, prevStart, prevEnd, bucketFn: d => {
+                    const diff = Math.floor((d - start) / 86400000); return Math.min(diff, 6)
+                }, buckets: 7, categories: cats
+            }
         }
         case '30days': {
-            const start    = new Date(today); start.setDate(start.getDate() - 29)
-            const end      = now
-            const prevStart= new Date(today); prevStart.setDate(prevStart.getDate() - 59)
-            const prevEnd  = new Date(today); prevEnd.setDate(prevEnd.getDate() - 30)
+            const start = new Date(today); start.setDate(start.getDate() - 29)
+            const end = now
+            const prevStart = new Date(today); prevStart.setDate(prevStart.getDate() - 59)
+            const prevEnd = new Date(today); prevEnd.setDate(prevEnd.getDate() - 30)
             const cats = Array.from({ length: 30 }, (_, i) => {
                 const d = new Date(today); d.setDate(d.getDate() - 29 + i)
-                return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`
+                return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`
             })
-            return { start, end, prevStart, prevEnd, bucketFn: d => {
-                const diff = Math.floor((d - start) / 86400000); return Math.min(diff, 29)
-            }, buckets: 30, categories: cats }
+            return {
+                start, end, prevStart, prevEnd, bucketFn: d => {
+                    const diff = Math.floor((d - start) / 86400000); return Math.min(diff, 29)
+                }, buckets: 30, categories: cats
+            }
         }
         case '90days':
         default: {
-            const start    = new Date(today); start.setDate(start.getDate() - 89)
-            const end      = now
-            const prevStart= new Date(today); prevStart.setDate(prevStart.getDate() - 179)
-            const prevEnd  = new Date(today); prevEnd.setDate(prevEnd.getDate() - 90)
+            const start = new Date(today); start.setDate(start.getDate() - 89)
+            const end = now
+            const prevStart = new Date(today); prevStart.setDate(prevStart.getDate() - 179)
+            const prevEnd = new Date(today); prevEnd.setDate(prevEnd.getDate() - 90)
             // group by week (13 weeks)
-            const cats = Array.from({ length: 13 }, (_, i) => `T${i+1}`)
-            return { start, end, prevStart, prevEnd, bucketFn: d => {
-                const diff = Math.floor((d - start) / (7 * 86400000)); return Math.min(diff, 12)
-            }, buckets: 13, categories: cats }
+            const cats = Array.from({ length: 13 }, (_, i) => `T${i + 1}`)
+            return {
+                start, end, prevStart, prevEnd, bucketFn: d => {
+                    const diff = Math.floor((d - start) / (7 * 86400000)); return Math.min(diff, 12)
+                }, buckets: 13, categories: cats
+            }
         }
     }
 }
@@ -92,33 +98,34 @@ const Dashboard = () => {
         unpaidBookings: 0,
         failedBookings: 0,
     })
+    const [allBookings, setAllBookings] = useState([])
 
     const dashboardCards = [
-        { title: 'Tổng số lượng xe',  value: data.totalCars,        icon: assets.carIconColored   },
-        { title: 'Tổng lượt đặt',     value: data.totalBookings,    icon: assets.listIconColored  },
-        { title: 'Chờ duyệt',         value: data.pendingBookings,  icon: assets.cautionIconColored },
-        { title: 'Đã xác nhận',       value: data.completedBookings,icon: assets.listIconColored  },
+        { title: 'Tổng số lượng xe', value: data.totalCars, icon: assets.carIconColored },
+        { title: 'Tổng lượt đặt', value: data.totalBookings, icon: assets.listIconColored },
+        { title: 'Chờ duyệt', value: data.pendingBookings, icon: assets.cautionIconColored },
+        { title: 'Đã xác nhận', value: data.completedBookings, icon: assets.listIconColored },
     ]
 
     useEffect(() => {
         const fetch = async () => {
             try {
-                const carsRes     = await api.get('/cars')
+                const carsRes = await api.get('/cars')
                 const bookingsRes = await api.get('/bookings')
-                const cars     = carsRes.data.success     ? carsRes.data.data     : []
+                const cars = carsRes.data.success ? carsRes.data.data : []
                 const bookings = bookingsRes.data.success ? bookingsRes.data.data : []
 
-                const totalCars         = cars.length
-                const totalBookings     = bookings.length
-                const pendingBookings   = bookings.filter(b => b.status === 'pending').length
+                const totalCars = cars.length
+                const totalBookings = bookings.length
+                const pendingBookings = bookings.filter(b => b.status === 'pending').length
                 const completedBookings = bookings.filter(b => b.status === 'confirmed').length
                 const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length
 
-                const paidBookings   = bookings.filter(b => b.paymentStatus === 'paid').length
+                const paidBookings = bookings.filter(b => b.paymentStatus === 'paid').length
                 const unpaidBookings = bookings.filter(b => b.paymentStatus === 'unpaid').length
                 const failedBookings = bookings.filter(b => b.paymentStatus === 'failed').length
 
-                const sorted         = [...bookings].sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+                const sorted = [...bookings].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                 const recentBookings = sorted.slice(0, 6)
 
                 const cm = new Date().getMonth(), cy = new Date().getFullYear()
@@ -128,6 +135,7 @@ const Dashboard = () => {
                         ? s + b.totalPrice : s
                 }, 0)
 
+                setAllBookings(bookings)
                 setData({ totalCars, totalBookings, pendingBookings, completedBookings, cancelledBookings, recentBookings, monthlyRevenue, paidBookings, unpaidBookings, failedBookings })
             } catch (e) { console.error(e) }
         }
@@ -178,12 +186,11 @@ const Dashboard = () => {
                                 </div>
                                 <div className="flex items-center gap-2 font-medium">
                                     <p className="text-sm text-green-600">{currency}{booking.totalPrice.toLocaleString()}</p>
-                                    <p className={`px-2 py-0.5 border border-borderColor rounded-full text-xs ${
-                                        booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                        booking.status === 'pending'   ? 'bg-yellow-100 text-yellow-700' :
-                                                                         'bg-red-100 text-red-700'}`}>
+                                    <p className={`px-2 py-0.5 border border-borderColor rounded-full text-xs ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                            booking.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                                                'bg-red-100 text-red-700'}`}>
                                         {booking.status === 'confirmed' ? 'Đã XN' :
-                                         booking.status === 'pending'   ? 'Chờ duyệt' : 'Đã hủy'}
+                                            booking.status === 'pending' ? 'Chờ duyệt' : 'Đã hủy'}
                                     </p>
                                 </div>
                             </div>
@@ -192,22 +199,13 @@ const Dashboard = () => {
                 </div>
 
                 {/* Booking Status Chart */}
-                <BookingStatusChart
-                    pending={data.pendingBookings}
-                    confirmed={data.completedBookings}
-                    cancelled={data.cancelledBookings}
-                    total={data.totalBookings}
-                />
+                <BookingStatusChart bookings={allBookings} />
             </div>
 
             {/* Row 2: Revenue Chart + Payment Pie Chart */}
             <div className='flex flex-wrap xl:flex-nowrap items-start gap-6 mb-8 w-full'>
                 <RevenueChart currency={currency} />
-                <PaymentStatusPieChart
-                    paid={data.paidBookings}
-                    unpaid={data.unpaidBookings}
-                    failed={data.failedBookings}
-                />
+                <PaymentStatusPieChart bookings={allBookings} />
             </div>
         </div>
     )
@@ -215,8 +213,8 @@ const Dashboard = () => {
 
 // ─── Revenue Chart with period selector ────────────────────────────────────────
 const RevenueChart = ({ currency }) => {
-    const [period, setPeriod]       = useState('7days')
-    const [open, setOpen]           = useState(false)
+    const [period, setPeriod] = useState('7days')
+    const [open, setOpen] = useState(false)
     const [chartData, setChartData] = useState({ confirmed: [], pending: [], categories: [] })
     const [totalRevenue, setTotalRevenue] = useState(0)
     const [pctChange, setPctChange] = useState(null) // null = no data for prev
@@ -237,7 +235,7 @@ const RevenueChart = ({ currency }) => {
                 const { start, end, prevStart, prevEnd, bucketFn, buckets, categories } = getPeriodRange(period)
 
                 const confirmed = Array(buckets).fill(0)
-                const pending   = Array(buckets).fill(0)
+                const pending = Array(buckets).fill(0)
                 let total = 0, prevTotal = 0
 
                 bookings.forEach(b => {
@@ -293,11 +291,11 @@ const RevenueChart = ({ currency }) => {
                 stops: [0, 100],
                 colorStops: [
                     [
-                        { offset: 0,   color: '#60a5fa', opacity: 0.5 },
+                        { offset: 0, color: '#60a5fa', opacity: 0.5 },
                         { offset: 100, color: '#1e3a5f', opacity: 0.02 },
                     ],
                     [
-                        { offset: 0,   color: '#93c5fd', opacity: 0.3 },
+                        { offset: 0, color: '#93c5fd', opacity: 0.3 },
                         { offset: 100, color: '#1e3a5f', opacity: 0 },
                     ],
                 ],
@@ -359,8 +357,8 @@ const RevenueChart = ({ currency }) => {
                     <div className={`flex items-center gap-0.5 text-sm font-semibold px-2 py-0.5 rounded-full
                         ${isPositive ? 'text-emerald-600' : 'text-red-500'}`}>
                         {isPositive
-                            ? <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v13m0-13 4 4m-4-4-4 4"/></svg>
-                            : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18V5m0 13-4-4m4 4 4-4"/></svg>
+                            ? <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v13m0-13 4 4m-4-4-4 4" /></svg>
+                            : <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 18V5m0 13-4-4m4 4 4-4" /></svg>
                         }
                         {Math.abs(pctChange)}%
                     </div>
@@ -383,13 +381,13 @@ const RevenueChart = ({ currency }) => {
                     >
                         {currentPeriodLabel}
                         <svg className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7"/>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="m19 9-7 7-7-7" />
                         </svg>
                     </button>
 
                     {open && (
                         <div className="absolute bottom-full mb-2 left-0 z-20 rounded-xl shadow-lg w-44 py-1 overflow-hidden bg-white"
-                             style={{ border: '1px solid #c7d2fe' }}>
+                            style={{ border: '1px solid #c7d2fe' }}>
                             {PERIODS.map(p => (
                                 <button
                                     key={p.value}
@@ -413,7 +411,7 @@ const RevenueChart = ({ currency }) => {
                 >
                     Báo cáo tiến độ
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m14 0-4 4m4-4-4-4"/>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 12H5m14 0-4 4m4-4-4-4" />
                     </svg>
                 </a>
             </div>
@@ -422,7 +420,7 @@ const RevenueChart = ({ currency }) => {
 }
 
 // ─── Booking Status Chart ───────────────────────────────────────────────────────
-const BookingStatusChart = ({ pending, confirmed, cancelled, total }) => {
+const BookingStatusChart = ({ bookings = [] }) => {
     const [showDetails, setShowDetails] = useState(false)
     const dropdownRef = useRef(null)
     const [open, setOpen] = useState(false)
@@ -438,15 +436,45 @@ const BookingStatusChart = ({ pending, confirmed, cancelled, total }) => {
         return () => document.removeEventListener('mousedown', handler)
     }, [])
 
+    const filterByPeriod = (bks, periodLabel) => {
+        const now = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        switch (periodLabel) {
+            case 'Hôm nay':
+                return bks.filter(b => new Date(b.createdAt) >= today)
+            case 'Hôm qua': {
+                const start = new Date(today); start.setDate(start.getDate() - 1)
+                return bks.filter(b => { const d = new Date(b.createdAt); return d >= start && d < today })
+            }
+            case '7 ngày qua': {
+                const start = new Date(today); start.setDate(start.getDate() - 6)
+                return bks.filter(b => new Date(b.createdAt) >= start)
+            }
+            case '30 ngày qua': {
+                const start = new Date(today); start.setDate(start.getDate() - 29)
+                return bks.filter(b => new Date(b.createdAt) >= start)
+            }
+            case '90 ngày qua': {
+                const start = new Date(today); start.setDate(start.getDate() - 89)
+                return bks.filter(b => new Date(b.createdAt) >= start)
+            }
+            default:
+                return bks
+        }
+    }
+    const filtered = filterByPeriod(bookings, period)
+    const pending = filtered.filter(b => b.status === 'pending').length
+    const confirmed = filtered.filter(b => b.status === 'confirmed').length
+    const cancelled = filtered.filter(b => b.status === 'cancelled').length
+    const total = filtered.length
     const safeTotal = total || 1
-    const pendingPct   = Math.round((pending   / safeTotal) * 100)
+    const pendingPct = Math.round((pending / safeTotal) * 100)
     const confirmedPct = Math.round((confirmed / safeTotal) * 100)
     const cancelledPct = Math.round((cancelled / safeTotal) * 100)
 
     const completionRate = confirmedPct
 
     const chartOptions = {
-        series: [pendingPct, confirmedPct, cancelledPct],
         colors: ['#f59e0b', '#10b981', '#ef4444'],
         chart: {
             height: 280,
@@ -556,8 +584,9 @@ const BookingStatusChart = ({ pending, confirmed, cancelled, total }) => {
             {/* Radial Chart */}
             <div className="py-2">
                 <ReactApexChart
+                    key={`status-${period}`}
                     options={chartOptions}
-                    series={chartOptions.series}
+                    series={[pendingPct, confirmedPct, cancelledPct]}
                     type="radialBar"
                     height={280}
                 />
@@ -608,7 +637,7 @@ const BookingStatusChart = ({ pending, confirmed, cancelled, total }) => {
 }
 
 // ─── Payment Status Pie Chart ──────────────────────────────────────────────────
-const PaymentStatusPieChart = ({ paid, unpaid, failed }) => {
+const PaymentStatusPieChart = ({ bookings = [] }) => {
     const dropdownRef = useRef(null)
     const [open, setOpen] = useState(false)
     const [period, setPeriod] = useState('Tất cả')
@@ -623,13 +652,35 @@ const PaymentStatusPieChart = ({ paid, unpaid, failed }) => {
         return () => document.removeEventListener('mousedown', handler)
     }, [])
 
+    const filterByPeriodPayment = (bks, periodLabel) => {
+        const now = new Date()
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        switch (periodLabel) {
+            case 'Hôm nay':
+                return bks.filter(b => new Date(b.createdAt) >= today)
+            case '7 ngày qua': {
+                const start = new Date(today); start.setDate(start.getDate() - 6)
+                return bks.filter(b => new Date(b.createdAt) >= start)
+            }
+            case '30 ngày qua': {
+                const start = new Date(today); start.setDate(start.getDate() - 29)
+                return bks.filter(b => new Date(b.createdAt) >= start)
+            }
+            case 'Tất cả':
+            default:
+                return bks
+        }
+    }
+    const filtered = filterByPeriodPayment(bookings, period)
+    const paid = filtered.filter(b => b.paymentStatus === 'paid').length
+    const unpaid = filtered.filter(b => b.paymentStatus === 'unpaid').length
+    const failed = filtered.filter(b => b.paymentStatus === 'failed').length
     const total = paid + unpaid + failed || 1
-    const paidPct   = Math.round((paid   / total) * 100)
+    const paidPct = Math.round((paid / total) * 100)
     const unpaidPct = Math.round((unpaid / total) * 100)
     const failedPct = Math.round((failed / total) * 100)
 
     const chartOptions = {
-        series: [paid, unpaid, failed],
         colors: ['#10b981', '#f59e0b', '#ef4444'],
         chart: {
             height: 280,
@@ -712,8 +763,9 @@ const PaymentStatusPieChart = ({ paid, unpaid, failed }) => {
             {/* Pie Chart */}
             <div className="py-2">
                 <ReactApexChart
+                    key={`payment-${period}`}
                     options={chartOptions}
-                    series={chartOptions.series}
+                    series={[paid, unpaid, failed]}
                     type="pie"
                     height={280}
                 />

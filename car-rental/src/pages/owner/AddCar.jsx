@@ -9,6 +9,7 @@ const AddCar = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null);
   const [car, setCar] = useState({
     brand: '',
     model: '',
@@ -55,6 +56,7 @@ const AddCar = () => {
         pricePerDay: Number(car.pricePerDay),
         location: car.location,
         image: imageBase64 || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341',
+        description: car.description || '',
         features: ["Bảo hiểm", "Điều hòa"], // Default features
         isAvailable: true
       };
@@ -74,7 +76,6 @@ const AddCar = () => {
     }
   }
 
-const [image, setImage] = useState(null)
 
   return (
     <div className='px-4 py-10 md:px-10 flex-1 text-black bg-white'>
