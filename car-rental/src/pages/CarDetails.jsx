@@ -57,8 +57,8 @@ const CarDetails = () => {
             return;
         }
 
-        if (days < 2) {
-            alert("Xe thuê tối thiểu ít nhất 2 ngày.");
+        if (days < 1) {
+            alert("Xe thuê tối thiểu ít nhất 1 ngày.");
             return;
         }
 
@@ -254,7 +254,7 @@ const CarDetails = () => {
 
                         <hr className="border-green-400" />
 
-                        <p className="text-gray-500">Lưu ý: xe thuê tối thiểu ít nhất 2 ngày</p>
+                        <p className="text-gray-500">Lưu ý: xe thuê tối thiểu ít nhất 1 ngày</p>
                         {/* Pickup Date */}
                         <div className="flex flex-col gap-2">
                             <label className="text-gray-500 font-bold" htmlFor="pickup-date">Ngày nhận xe</label>
@@ -396,13 +396,12 @@ const CarDetails = () => {
                         <button
                             type="submit"
                             disabled={bookingLoading}
-                            className={`w-full text-white py-3 rounded-xl transition flex items-center justify-center gap-2 font-semibold ${
-                                bookingLoading
+                            className={`w-full text-white py-3 rounded-xl transition flex items-center justify-center gap-2 font-semibold ${bookingLoading
                                     ? "bg-blue-400 cursor-not-allowed"
                                     : paymentMethod === "momo"
-                                    ? "bg-[#ae2070] hover:bg-[#8d1a5a]"
-                                    : "bg-blue-600 hover:bg-blue-700"
-                            }`}
+                                        ? "bg-[#ae2070] hover:bg-[#8d1a5a]"
+                                        : "bg-blue-600 hover:bg-blue-700"
+                                }`}
                         >
                             {bookingLoading ? (
                                 <>
