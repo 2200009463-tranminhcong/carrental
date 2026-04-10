@@ -15,12 +15,11 @@ export const MOMO_CONFIG = {
   endpoint: "https://test-payment.momo.vn/v2/gateway/api/create",
 
   // URL callback sau khi thanh toán (client redirect)
-  redirectUrl: process.env.CLIENT_URL
-    ? `${process.env.CLIENT_URL}/payment-result`
-    : "http://localhost:5173/payment-result",
+  redirectUrl: "http://localhost:5173/payment-result",
 
   // URL nhận IPN (Instant Payment Notification) từ MoMo server
-  ipnUrl: process.env.IPN_URL || "https://carrental-api.vercel.app/api/bookings/momo-payment/ipn",
+  // Trong môi trường dev, dùng ngrok hoặc webhook.site để nhận
+  ipnUrl: "https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b",
 
   requestType: "payWithMethod",
   lang: "vi",
