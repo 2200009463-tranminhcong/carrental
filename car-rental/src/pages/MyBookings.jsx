@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MapPin, Calendar, Clock, Search } from "lucide-react";
+import { MapPin, Calendar, Clock, Search, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 import api from "../utils/api";
@@ -9,11 +9,12 @@ const MyBookings = () => {
     const { user, isLoaded, isSignedIn } = useUser();
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [cancelModalData, setCancelModalData] = useState({ isOpen: false, bookingId: null });
 
     useEffect(() => {
         const fetchMyBookings = async () => {
             if (!isLoaded) return;
-            
+
             if (!isSignedIn) {
                 setLoading(false);
                 return;
@@ -33,7 +34,7 @@ const MyBookings = () => {
                     const response = await api.get(`/bookings/user/${mongoUserId}`);
                     if (response.data.success) {
                         const sorted = [...response.data.data].sort(
-                            (a, b) => new Date(b.pickupDate) - new Date(a.pickupDate)
+                            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
                         );
                         setBookings(sorted);
                     }
@@ -61,6 +62,34 @@ const MyBookings = () => {
         );
     }
 
+    const handleConfirmCancel = async () => {
+        const id = cancelModalData.bookingId;
+        if (!id) return;
+        try {
+            const res = await api.put(`/bookings/${id}/status`, { status: "cancelled" });
+            if (res.data.success) {
+                setBookings(bookings.map(c => c._id === id ? { ...c, status: "cancelled" } : c));
+                setCancelModalData({ isOpen: false, bookingId: null });
+            }
+        } catch (error) {
+            console.error("Lỗi khi hủy đặt xe:", error);
+            alert("Lỗi khi hủy đặt xe.");
+        }
+    };
+
+    const markAsRead = async (id) => {
+        try {
+            const res = await api.put(`/bookings/${id}/read`);
+            if (res.data.success) {
+                // Update local state
+                setBookings(bookings.map(c => c._id === id ? { ...c, isRead: true } : c));
+            }
+        } catch (error) {
+            console.error("Lỗi khi cập nhật trạng thái đã đọc:", error);
+            alert("Lỗi khi cập nhật trạng thái.");
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-b from-[#E4E9FF] via-[#FFF3CC] to-[#CCD9FF] py-16">
             <div className=" px-6 md:px-16 lg:px-24 xl:px-32 mt-13 mb-20 mr-48  max-w-7xl">
@@ -87,7 +116,15 @@ const MyBookings = () => {
                         {bookings.map((booking) => (
                             <div
                                 key={booking._id}
-                                className="bg-[#F4F7FF] border border-[#D6E0FF] text-black grid grid-cols-2 md:grid-cols-4 gap-6 p-6 border rounded-lg mt-6 shadow-lg" >
+                                className={`grid grid-cols-2 md:grid-cols-4 gap-6 p-6 border rounded-lg mt-6 shadow-lg text-black relative transition-colors ${booking.isRead ? "bg-[#F4F7FF] border-[#D6E0FF]" : "bg-blue-50 border-blue-300"
+                                    }`} >
+
+                                {!booking.isRead && (
+                                    <span className="absolute top-4 right-5 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                                    </span>
+                                )}
                                 {/* Car Image */}
                                 <div>
                                     <img
@@ -107,6 +144,19 @@ const MyBookings = () => {
                                 </div>
                                 {/* Booking Info */}
                                 <div className="md:col-span-2">
+                                    {!booking.isRead && (
+                                        <button
+                                            onClick={() => markAsRead(booking._id)}
+                                            className="whitespace-nowrap flex items-center gap-1.5 px-4 py-2 bg-white text-sm border border-gray-300 hover:bg-gray-50 rounded-md transition-colors text-gray-700 cursor-pointer"
+                                        >
+                                            <CheckCircle size={16} className="text-green-500" />
+                                            Đánh dấu đã xem
+                                        </button>
+                                    )}
+                                    <h3 className="font-semibold text-lg flex items-center gap-2">
+                                        Thông tin chuyến đi
+                                        {!booking.isRead && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">Mới</span>}
+                                    </h3>
                                     <div className="flex items-center gap-3">
                                         <p className="bg-gray-100 px-3 py-1 rounded text-sm">
                                             Đơn #{booking._id.slice(-6).toUpperCase()}
@@ -129,7 +179,7 @@ const MyBookings = () => {
                                             <p>{new Date(booking.pickupDate).toLocaleDateString("vi-VN")} → {new Date(booking.returnDate).toLocaleDateString("vi-VN")}</p>
                                         </div>
                                     </div>
-                                
+
                                     {/* Pickup Location */}
                                     <div className="flex items-center gap-2 mt-4">
                                         <MapPin size={16} className="text-red-500" />
@@ -137,7 +187,7 @@ const MyBookings = () => {
                                             <p className="text-gray-500 text-sm">
                                                 Địa điểm nhận xe</p>
                                             <p>
-                                                {booking.pickupType === "delivery" 
+                                                {booking.pickupType === "delivery"
                                                     ? `Giao tại: ${booking.deliveryAddress}`
                                                     : `Tại cửa hàng: ${booking.pickupLocation}`
                                                 }
@@ -148,11 +198,10 @@ const MyBookings = () => {
                                     {/* Payment Status */}
                                     <div className="mt-4">
                                         <p className="text-gray-500 text-sm">Thanh toán</p>
-                                        <p className={`text-sm font-semibold ${
-                                            booking.paymentStatus === "paid" 
-                                                ? "text-green-600"
-                                                : "text-yellow-600"
-                                        }`}>
+                                        <p className={`text-sm font-semibold ${booking.paymentStatus === "paid"
+                                            ? "text-green-600"
+                                            : "text-yellow-600"
+                                            }`}>
                                             {booking.paymentStatus === "paid" ? "✓ Đã thanh toán" : "Chưa thanh toán"}
                                         </p>
                                     </div>
@@ -180,11 +229,57 @@ const MyBookings = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex flex-col justify-between items-end">
+                                    <div className="flex gap-2">
+                                        {booking.status === "pending" && (
+                                            <button
+                                                onClick={() => setCancelModalData({ isOpen: true, bookingId: booking._id })}
+                                                className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-md hover:bg-red-100 transition-colors text-sm"
+                                            >
+                                                Hủy đặt xe
+                                            </button>
+                                        )}
+
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Modal Xác Nhận Hủy Đặt Xe */}
+            {cancelModalData.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+                    <div className="flex flex-col items-center bg-white shadow-xl rounded-xl py-6 px-5 w-full max-w-[370px] md:max-w-[460px] border border-gray-200">
+                        <div className="flex items-center justify-center p-4 bg-red-100 rounded-full">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2.875 5.75h1.917m0 0h15.333m-15.333 0v13.417a1.917 1.917 0 0 0 1.916 1.916h9.584a1.917 1.917 0 0 0 1.916-1.916V5.75m-10.541 0V3.833a1.917 1.917 0 0 1 1.916-1.916h3.834a1.917 1.917 0 0 1 1.916 1.916V5.75m-5.75 4.792v5.75m3.834-5.75v5.75" stroke="#DC2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                        </div>
+                        <h2 className="text-gray-900 font-semibold mt-4 text-xl">Xác nhận hủy đặt xe</h2>
+                        <p className="text-sm text-gray-600 mt-2 text-center leading-relaxed">
+                            Bạn có chắc chắn muốn hủy đặt chiếc xe này?<br />Thao tác này không thể hoàn tác.
+                        </p>
+                        <div className="flex items-center justify-center gap-4 mt-6 w-full">
+                            <button 
+                                onClick={() => setCancelModalData({ isOpen: false, bookingId: null })}
+                                type="button" 
+                                className="w-full md:w-36 h-11 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium text-sm hover:bg-gray-50 active:scale-95 transition-all">
+                                Quay lại
+                            </button>
+                            <button 
+                                onClick={handleConfirmCancel}
+                                type="button" 
+                                className="w-full md:w-36 h-11 rounded-lg text-white bg-red-600 font-medium text-sm hover:bg-red-700 active:scale-95 transition-all shadow-sm shadow-red-200">
+                                Chắc chắn hủy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 

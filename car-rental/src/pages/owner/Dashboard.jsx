@@ -612,7 +612,7 @@ const BookingStatusChart = ({ bookings = [] }) => {
                                 <button
                                     key={p}
                                     onClick={() => { setPeriod(p); setOpen(false) }}
-                                    className={`w-full text-left px-3 py-2 text-sm transition-colors
+                                    className={`w-full bg-white text-left px-3 py-2 text-sm transition-colors
                                         ${period === p ? 'text-indigo-700 font-semibold bg-indigo-50' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'}`}
                                 >
                                     {p}

@@ -438,3 +438,23 @@ export const paymentMomo = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// Đánh dấu booking đã đọc
+export const markBookingAsRead = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const booking = await Booking.findByIdAndUpdate(
+            id,
+            { isRead: true },
+            { new: true }
+        );
+
+        if (!booking) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy đơn đặt xe" });
+        }
+
+        res.status(200).json({ success: true, message: "Đã đánh dấu là đã đọc", data: booking });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

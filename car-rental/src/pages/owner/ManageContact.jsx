@@ -34,12 +34,12 @@ const ManageContact = () => {
         } catch (error) {
             console.error("Lỗi khi cập nhật trạng thái đã đọc:", error);
             alert("Lỗi khi cập nhật trạng thái.");
-        }
-    };
+            }
+        };
 
-    if (loading) {
-        return <div className="p-10 flex-1 bg-white text-black">Đang tải danh sách liên hệ...</div>;
-    }
+        if (loading) {
+            return <div className="p-10 flex-1 bg-white text-black">Đang tải danh sách liên hệ...</div>;
+        }
 
     return (
         <div className='px-4 py-10 md:px-10 flex-1 text-black bg-white overflow-y-auto'>

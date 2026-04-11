@@ -11,6 +11,7 @@ import {
     momoIpnCallback,
     getBookingById,
     confirmMomoPayment,
+    markBookingAsRead,
 } from "../controllers/bookingController.js";
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.get("/momo-info", getMomoInfo);
 router.get("/user/:userId", getUserBookings);
 router.get("/:id", getBookingById);
 router.put("/:id/status", updateBookingStatus);
+router.put("/:id/read", markBookingAsRead);
 router.put("/:id/payment-status", updatePaymentStatus);  // Admin đổi trạng thái thanh toán
 
 // Momo Payment (legacy manual)
