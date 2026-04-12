@@ -12,6 +12,7 @@ import {
     getBookingById,
     confirmMomoPayment,
     markBookingAsRead,
+    getBookedDates,
 } from "../controllers/bookingController.js";
 
 const router = express.Router();
@@ -21,6 +22,7 @@ router.post("/", createBooking);
 router.get("/", getAllBookings);
 router.get("/momo-info", getMomoInfo);
 router.get("/user/:userId", getUserBookings);
+router.get("/booked-dates/:carId", getBookedDates);
 router.get("/:id", getBookingById);
 router.put("/:id/status", updateBookingStatus);
 router.put("/:id/read", markBookingAsRead);

@@ -3,6 +3,8 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { MapPin, Users, Cog, Fuel, Star, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import api from "../utils/api";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const CarDetails = () => {
     const { id } = useParams();
@@ -11,8 +13,9 @@ const CarDetails = () => {
 
     const [car, setCar] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [pickupDate, setPickupDate] = useState("");
-    const [returnDate, setReturnDate] = useState("");
+    const [pickupDate, setPickupDate] = useState(null);
+    const [returnDate, setReturnDate] = useState(null);
+    const [bookedDates, setBookedDates] = useState([]);
     const [pickupType, setPickupType] = useState("store");
     const [deliveryAddress, setDeliveryAddress] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("cash");
@@ -21,15 +24,24 @@ const CarDetails = () => {
     useEffect(() => {
         const fetchCarDetail = async () => {
             try {
-                const response = await api.get(`/cars/${id}`);
-                if (response.data.success) {
-                    setCar(response.data.data);
-                } else {
-                    setCar(null);
+                const [carRes, bookedRes] = await Promise.all([
+                    api.get(`/cars/${id}`),
+                    api.get(`/bookings/booked-dates/${id}`)
+                ]);
+
+                if (carRes.data.success) {
+                    setCar(carRes.data.data);
+                }
+                if (bookedRes.data.success) {
+                    // Chuyển đổi chuỗi ngày thành đối tượng Date
+                    const ranges = bookedRes.data.data.map(b => ({
+                        start: new Date(b.pickupDate),
+                        end: new Date(b.returnDate)
+                    }));
+                    setBookedDates(ranges);
                 }
             } catch (error) {
-                console.error("Lỗi khi tải chi tiết xe:", error);
-                setCar(null);
+                console.error("Lỗi khi tải thông tin chi tiết:", error);
             } finally {
                 setLoading(false);
             }
@@ -258,28 +270,37 @@ const CarDetails = () => {
                         {/* Pickup Date */}
                         <div className="flex flex-col gap-2">
                             <label className="text-gray-500 font-bold" htmlFor="pickup-date">Ngày nhận xe</label>
-                            <input
-                                type="date"
-                                id="pickup-date"
-                                onChange={(e) => setPickupDate(e.target.value)}
-                                className="bg-slate-300 text-blue-500 border px-3 py-2 rounded-lg"
+                            <DatePicker
+                                selected={pickupDate}
+                                onChange={(date) => setPickupDate(date)}
+                                selectsStart
+                                startDate={pickupDate}
+                                endDate={returnDate}
+                                minDate={new Date()}
+                                excludeDateIntervals={bookedDates}
+                                placeholderText="Chọn ngày nhận"
+                                className="w-full bg-slate-300 text-blue-600 border px-3 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                dateFormat="dd/MM/yyyy"
                                 required
-                                min={new Date().toISOString().split("T")[0]}
                             />
                         </div>
 
                         {/* Return Date */}
                         <div className="flex flex-col gap-2">
                             <label className="text-gray-500 font-bold" htmlFor="return-date">Ngày trả xe</label>
-                            <input
-                                type="date"
-                                id="return-date"
-                                onChange={(e) => setReturnDate(e.target.value)}
-                                className="bg-slate-300 text-blue-500 border px-3 py-2 rounded-lg"
+                            <DatePicker
+                                selected={returnDate}
+                                onChange={(date) => setReturnDate(date)}
+                                selectsEnd
+                                startDate={pickupDate}
+                                endDate={returnDate}
+                                minDate={pickupDate || new Date()}
+                                excludeDateIntervals={bookedDates}
+                                placeholderText="Chọn ngày trả"
+                                className="w-full bg-slate-300 text-blue-600 border px-3 py-2 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                dateFormat="dd/MM/yyyy"
                                 required
-                                min={pickupDate
-                                    ? (() => { const d = new Date(pickupDate); d.setDate(d.getDate() + 1); return d.toISOString().split("T")[0]; })()
-                                    : new Date().toISOString().split("T")[0]}
+                                disabled={!pickupDate}
                             />
                         </div>
 

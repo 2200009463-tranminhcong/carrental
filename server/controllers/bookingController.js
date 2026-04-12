@@ -4,6 +4,34 @@ import crypto from "crypto";
 import https from "https";
 import { MOMO_CONFIG } from "../configs/momo.js";
 
+// Kiểm tra tính khả dụng của xe
+const checkCarAvailability = async (carId, pickupDate, returnDate) => {
+    const conflict = await Booking.findOne({
+        car: carId,
+        status: { $in: ["pending", "confirmed", "completed"] },
+        $and: [
+            { pickupDate: { $lt: new Date(returnDate) } },
+            { returnDate: { $gt: new Date(pickupDate) } }
+        ]
+    });
+    return conflict ? false : true;
+};
+
+// Lấy danh sách ngày đã được đặt của một xe
+export const getBookedDates = async (req, res) => {
+    try {
+        const { carId } = req.params;
+        const bookings = await Booking.find({
+            car: carId,
+            status: { $in: ["pending", "confirmed", "completed"] }
+        }).select("pickupDate returnDate");
+
+        res.status(200).json({ success: true, data: bookings });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 // Tạo booking mới
 export const createBooking = async (req, res) => {
     try {
@@ -18,6 +46,15 @@ export const createBooking = async (req, res) => {
         // Kiểm tra dữ liệu đầu vào
         if (!user || !car || !pickupDate || !returnDate || !pickupLocation || !totalPrice) {
             return res.status(400).json({ success: false, message: "Dữ liệu không đầy đủ" });
+        }
+
+        // Kiểm tra trùng lịch xe
+        const isAvailable = await checkCarAvailability(car, pickupDate, returnDate);
+        if (!isAvailable) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Xe đã được đặt trong khoảng thời gian này. Vui lòng chọn thời gian khác." 
+            });
         }
 
         const newBooking = new Booking({
