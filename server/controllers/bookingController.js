@@ -1,12 +1,13 @@
+import mongoose from "mongoose";
 import Booking from "../models/Booking.js";
 import Car from "../models/Car.js";
 import crypto from "crypto";
 import https from "https";
 import { MOMO_CONFIG } from "../configs/momo.js";
 
-// Kiểm tra tính khả dụng của xe
-const checkCarAvailability = async (carId, pickupDate, returnDate) => {
-    const conflict = await Booking.findOne({
+// Kiểm tra tính khả dụng của xe (hỗ trợ session để dùng trong transaction)
+const checkCarAvailability = async (carId, pickupDate, returnDate, session = null) => {
+    const query = Booking.findOne({
         car: carId,
         status: { $in: ["pending", "confirmed", "completed"] },
         $and: [
@@ -14,6 +15,8 @@ const checkCarAvailability = async (carId, pickupDate, returnDate) => {
             { returnDate: { $gt: new Date(pickupDate) } }
         ]
     });
+    if (session) query.session(session);
+    const conflict = await query;
     return conflict ? false : true;
 };
 
@@ -32,10 +35,15 @@ export const getBookedDates = async (req, res) => {
     }
 };
 
-// Tạo booking mới
+// Tạo booking mới (chống race condition bằng optimistic lock: save rồi verify)
 export const createBooking = async (req, res) => {
     try {
         const { user, car, pickupDate, returnDate, pickupLocation, returnLocation, pickupType, deliveryAddress, paymentMethod, totalPrice } = req.body;
+
+        // Kiểm tra dữ liệu đầu vào
+        if (!user || !car || !pickupDate || !returnDate || !pickupLocation || !totalPrice) {
+            return res.status(400).json({ success: false, message: "Dữ liệu không đầy đủ" });
+        }
 
         // Kiểm tra xe có tồn tại không
         const existingCar = await Car.findById(car);
@@ -43,20 +51,16 @@ export const createBooking = async (req, res) => {
             return res.status(404).json({ success: false, message: "Không tìm thấy xe" });
         }
 
-        // Kiểm tra dữ liệu đầu vào
-        if (!user || !car || !pickupDate || !returnDate || !pickupLocation || !totalPrice) {
-            return res.status(400).json({ success: false, message: "Dữ liệu không đầy đủ" });
-        }
-
-        // Kiểm tra trùng lịch xe
-        const isAvailable = await checkCarAvailability(car, pickupDate, returnDate);
-        if (!isAvailable) {
+        // Kiểm tra sơ bộ trước khi lưu (lọc rõ ràng những cạnh xữ lý không đồng thời)
+        const isAvailableFirst = await checkCarAvailability(car, pickupDate, returnDate);
+        if (!isAvailableFirst) {
             return res.status(400).json({ 
                 success: false, 
                 message: "Xe đã được đặt trong khoảng thời gian này. Vui lòng chọn thời gian khác." 
             });
         }
 
+        // Lưu booking mới vào DB
         const newBooking = new Booking({
             user,
             car,
@@ -73,6 +77,34 @@ export const createBooking = async (req, res) => {
         });
 
         const savedBooking = await newBooking.save();
+
+        // ===== OPTIMISTIC LOCK: Kiem tra lai SAU KHI LUU =====
+        // ObjectId nho hon = tao truoc = THANG race, duoc giu lai
+        const conflict = await Booking.findOne({
+            _id: { $ne: savedBooking._id },
+            car: car,
+            status: { $in: ["pending", "confirmed", "completed"] },
+            $and: [
+                { pickupDate: { $lt: new Date(returnDate) } },
+                { returnDate: { $gt: new Date(pickupDate) } }
+            ]
+        });
+
+        if (conflict) {
+            // So sanh ObjectId: ID nho hon = tao truoc = duoc uu tien giu lai
+            const weWon = savedBooking._id.toString() < conflict._id.toString();
+            if (!weWon) {
+                // Booking cua chung ta tao SAU -> thua -> huy
+                await Booking.findByIdAndUpdate(savedBooking._id, { status: "cancelled" });
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Xe đã được đặt trong khoảng thời gian này. Vui lòng chọn thời gian khác." 
+                });
+            }
+            // Booking cua chung ta tao TRUOC -> thang -> tiep tuc binh thuong
+        }
+
+                // Tất cả ok - trả về thành công
         res.status(201).json({ success: true, data: savedBooking });
     } catch (error) {
         console.error("Lỗi tạo booking:", error);

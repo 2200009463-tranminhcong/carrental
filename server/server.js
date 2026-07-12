@@ -16,7 +16,10 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || "*",
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 
 // API Endpoints
@@ -24,6 +27,11 @@ app.use("/api/cars", carRoute);
 app.use("/api/bookings", bookingRoute);
 app.use("/api/users", userRoute);
 app.use("/api/contacts", contactRoute);
+
+// Health check — dùng để ping giữ server không ngủ (UptimeRobot, v.v.)
+app.get("/api/health", (req, res) =>
+  res.json({ status: "ok", timestamp: new Date().toISOString() })
+);
 
 app.get('/', (req, res) => res.send("Server is running. API is ready."));
 

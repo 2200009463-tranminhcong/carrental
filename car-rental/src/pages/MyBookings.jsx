@@ -50,12 +50,12 @@ const MyBookings = () => {
     }, [isLoaded, isSignedIn, user]);
 
     if (loading) {
-        return <div className="min-h-screen bg-gray-200 py-16 text-center text-xl mt-20">Đang tải lịch sử đặt xe...</div>;
+        return <div className="min-h-screen bg-gray-400 py-16 text-center text-xl ">Đang tải lịch sử đặt xe...</div>;
     }
 
     if (!isSignedIn) {
         return (
-            <div className="min-h-screen bg-gray-200 py-16 text-center flex flex-col items-center mt-20">
+            <div className="min-h-screen bg-gray-700 py-16 text-center flex flex-col items-center">
                 <h1 className="text-2xl font-bold mb-4">Bạn chưa đăng nhập!</h1>
                 <p>Vui lòng đăng nhập để xem các chuyến đi của mình.</p>
             </div>

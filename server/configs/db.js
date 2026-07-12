@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
 import dns from "dns";
 
-// Ưu tiên dùng Google DNS để bypass lỗi SRV của VNPT
-dns.setDefaultResultOrder("ipv4first");
-dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+// Chỉ dùng Google DNS khi chạy local (bypass lỗi SRV của VNPT)
+// Không áp dụng trên production (Render, Vercel, ...) để tránh conflict
+if (process.env.NODE_ENV !== "production") {
+  dns.setDefaultResultOrder("ipv4first");
+  dns.setServers(["8.8.8.8", "8.8.4.4", "1.1.1.1"]);
+}
 
 const MAX_RETRIES = 5;
 const RETRY_INTERVAL_MS = 5000;
